@@ -28,9 +28,10 @@ public class DownloadController {
         response.reset();
         response.setHeader("Accept-Ranges", "bytes");
         response.setHeader("Content-Type", "application/x-download;charset=utf-8");
-        response.setHeader("Content-Length", String.valueOf(fSize));
+        response.setHeader("Content-Length", String.valueOf(fSize));// 告诉客户端文件的大小，能够识别下载进度
         response.setHeader("Content-Disposition", "attachment; filename=" + filename);// 文件名可能为中文，需要处理
-
+        
+        // 这段代码用于续传，在同一个http请求内的传输不算续传。
         // 定义偏移量
         long offset = 0;
         if (null != request.getHeader("Range")) {
@@ -53,10 +54,13 @@ public class DownloadController {
         int length = 0;
         OutputStream output = response.getOutputStream();
         while ((length = input.read(buffer, 0, buffer.length)) != -1) {
+            // 若客户端挂起请求，此处会阻塞
             output.write(buffer, 0, length);
             // 用于调试，防止下载速度过快
             // Thread.sleep(100);
         }
+        
+        // 这里是无效代码
         output.flush();
         return "Hello world!";
     }
